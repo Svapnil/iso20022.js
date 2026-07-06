@@ -141,6 +141,35 @@ describe('RTPCreditPaymentInitiation', () => {
             expect(isValid).toBeTruthy();
         });
 
+        test('should default the requested execution date to the creation date when requestedExecutionDate is not provided', () => {
+            rtpPayment = new RTPCreditPaymentInitiation({
+                ...rtpPaymentInitiationConfig,
+                creationDate: new Date('2025-03-01T12:00:00.000Z')
+            });
+            const xml = rtpPayment.serialize();
+            expect(xml).toMatch(/<ReqdExctnDt>2025-03-01<\/ReqdExctnDt>/);
+        });
+
+        test('should use the execution date when provided', () => {
+            rtpPayment = new RTPCreditPaymentInitiation({
+                ...rtpPaymentInitiationConfig,
+                creationDate: new Date('2025-03-01T12:00:00.000Z'),
+                requestedExecutionDate: new Date('2025-03-15T00:00:00.000Z')
+            });
+            const xml = rtpPayment.serialize();
+            expect(xml).toMatch(/<ReqdExctnDt>2025-03-15<\/ReqdExctnDt>/);
+
+            // Validate against XSD
+            const xsdSchema = fs.readFileSync(
+                `${process.cwd()}/schemas/pain/pain.001.001.03.xsd`,
+                'utf8',
+            );
+            const xmlDoc = libxmljs.parseXml(xml);
+            const xsdDoc = libxmljs.parseXml(xsdSchema);
+            const isValid = xmlDoc.validate(xsdDoc);
+            expect(isValid).toBeTruthy();
+        });
+
         describe('created with iso20022', () => {
             let iso20022 = new ISO20022({
                 initiatingParty: initiatingParty
@@ -184,6 +213,7 @@ describe('RTPCreditPaymentInitiation', () => {
             test('should correctly parse message metadata', () => {
                 expect(rtpPayment.messageId).toBe('DOMT11234562');
                 expect(rtpPayment.creationDate).toStrictEqual(new Date('2020-06-29T10:24:09'));
+                expect(rtpPayment.requestedExecutionDate).toStrictEqual(new Date('2020-06-29'));
             });
 
             test('should correctly parse initiating party information', () => {
