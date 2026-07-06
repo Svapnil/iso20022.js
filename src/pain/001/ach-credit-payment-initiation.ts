@@ -18,6 +18,7 @@ type AtLeastOne<T> = [T, ...T[]];
  * @property {AtLeastOne<ACHCreditPaymentInstruction>} paymentInstructions - Array containing at least one payment instruction for the ACH credit transfer.
  * @property {string} [messageId] - Optional unique identifier for the message. If not provided, a UUID will be generated.
  * @property {Date} [creationDate] - Optional creation date for the message. If not provided, current date will be used.
+ * @property {Date} [requestedExecutionDate] - Optional requested execution date for the payment. If not provided, the creation date will be used.
  */
 export interface ACHCreditPaymentInitiationConfig {
     /** The party initiating the ACH credit transfer. */
@@ -28,6 +29,8 @@ export interface ACHCreditPaymentInitiationConfig {
     messageId?: string
     /** Optional creation date for the message. If not provided, current date will be used. */
     creationDate?: Date
+    /** Optional requested execution date for the payment. If not provided, the creation date will be used. */
+    requestedExecutionDate?: Date
     /** Optional local instrument code for the ACH credit transfer. If not provided, 'CCD' (Corporate Credit or Debit) will be used. */
     localInstrument?: ACHLocalInstrument
 }
@@ -82,6 +85,7 @@ export class ACHCreditPaymentInitiation extends PaymentInitiation {
     public paymentInstructions: AtLeastOne<ACHCreditPaymentInstruction>
     public messageId: string
     public creationDate: Date
+    public requestedExecutionDate: Date
     public paymentInformationId: string;
     public localInstrument: string;
     public serviceLevel: string;
@@ -94,6 +98,7 @@ export class ACHCreditPaymentInitiation extends PaymentInitiation {
         this.paymentInstructions = config.paymentInstructions;
         this.messageId = config.messageId || uuidv4().replace(/-/g, '');
         this.creationDate = config.creationDate || new Date();
+        this.requestedExecutionDate = config.requestedExecutionDate || this.creationDate;
         this.paymentInformationId = sanitize(uuidv4(), 35);
         this.localInstrument = config.localInstrument || ACHLocalInstrumentCode.CorporateCreditDebit;
         this.serviceLevel = 'NURG'; // Normal Urgency
@@ -215,7 +220,7 @@ export class ACHCreditPaymentInitiation extends PaymentInitiation {
                             SvcLvl: { Cd: this.serviceLevel },
                             LclInstrm: { Prtry: this.localInstrument },
                         },
-                        ReqdExctnDt: this.creationDate.toISOString().split('T')[0],
+                        ReqdExctnDt: this.requestedExecutionDate.toISOString().split('T')[0],
                         Dbtr: this.party(this.initiatingParty),
                         DbtrAcct: this.account(this.initiatingParty.account as Account),
                         DbtrAgt: this.agent(this.initiatingParty.agent as Agent),
@@ -257,6 +262,10 @@ export class ACHCreditPaymentInitiation extends PaymentInitiation {
         if (Array.isArray(xml.Document.CstmrCdtTrfInitn.PmtInf)) {
             throw new Error('Multiple PmtInf is not supported');
         }
+
+        // Fall back to the creation date when ReqdExctnDt is missing or not a parseable date
+        const rawExecutionDate = new Date(xml.Document.CstmrCdtTrfInitn.PmtInf.ReqdExctnDt as string);
+        const requestedExecutionDate = isNaN(rawExecutionDate.getTime()) ? undefined : rawExecutionDate;
 
         // Extract payment type information
         const pmtTpInf = xml.Document.CstmrCdtTrfInitn.PmtInf.PmtTpInf;
@@ -304,6 +313,7 @@ export class ACHCreditPaymentInitiation extends PaymentInitiation {
         return new ACHCreditPaymentInitiation({
             messageId: messageId,
             creationDate: creationDate,
+            requestedExecutionDate: requestedExecutionDate,
             initiatingParty: initiatingParty,
             paymentInstructions: paymentInstructions
         });

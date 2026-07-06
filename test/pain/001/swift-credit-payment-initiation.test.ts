@@ -97,6 +97,35 @@ describe('SWIFTCreditPaymentInitiation', () => {
     expect(isValid).toBeTruthy();
   });
 
+  test('should default the requested execution date to the creation date when requestedExecutionDate is not provided', () => {
+    swiftPayment = iso20022.createSWIFTCreditPaymentInitiation({
+      paymentInstructions: [instruction1],
+      creationDate: new Date('2025-03-01T12:00:00.000Z'),
+    });
+    const xml = swiftPayment.serialize();
+    expect(xml).toMatch(/<ReqdExctnDt>2025-03-01<\/ReqdExctnDt>/);
+  });
+
+  test('should use the execution date when provided', () => {
+    swiftPayment = iso20022.createSWIFTCreditPaymentInitiation({
+      paymentInstructions: [instruction1],
+      creationDate: new Date('2025-03-01T12:00:00.000Z'),
+      requestedExecutionDate: new Date('2025-03-15T00:00:00.000Z'),
+    });
+    const xml = swiftPayment.serialize();
+    expect(xml).toMatch(/<ReqdExctnDt>2025-03-15<\/ReqdExctnDt>/);
+
+    // Validate against XSD
+    const xsdSchema = fs.readFileSync(
+      `${process.cwd()}/schemas/pain/pain.001.001.03.xsd`,
+      'utf8',
+    );
+    const xmlDoc = libxmljs.parseXml(xml);
+    const xsdDoc = libxmljs.parseXml(xsdSchema);
+    const isValid = xmlDoc.validate(xsdDoc);
+    expect(isValid).toBeTruthy();
+  });
+
   describe('when there are multiple payment instructions', () => {
     beforeEach(() => {
       swiftPayment = iso20022.createSWIFTCreditPaymentInitiation({
@@ -136,6 +165,7 @@ describe('SWIFTCreditPaymentInitiation', () => {
       test('should correctly parse information', () => {
         expect(swiftPayment.messageId).toBe("bbd49338b6a3434aad7537d07b248a99");
         expect(swiftPayment.creationDate.toISOString()).toBe("2025-02-22T04:30:49.327Z");
+        expect(swiftPayment.requestedExecutionDate).toStrictEqual(new Date("2025-02-22"));
         expect(swiftPayment.initiatingParty).toEqual({
           name: "Example Corp",
           id: "EXAMPLECORP",
