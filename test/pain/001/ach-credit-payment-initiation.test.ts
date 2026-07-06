@@ -150,6 +150,35 @@ describe('ACHCreditPaymentInitiation', () => {
             expect(xml).toMatch(/<InstrPrty>\s*NORM\s*<\/InstrPrty>/);
         });
 
+        test('should default the requested execution date to the creation date when requestedExecutionDate is not provided', () => {
+            achPayment = new ACHCreditPaymentInitiation({
+                ...achPaymentInitiationConfig,
+                creationDate: new Date('2025-03-01T12:00:00.000Z')
+            });
+            const xml = achPayment.serialize();
+            expect(xml).toMatch(/<ReqdExctnDt>2025-03-01<\/ReqdExctnDt>/);
+        });
+
+        test('should use the execution date when provided', () => {
+            achPayment = new ACHCreditPaymentInitiation({
+                ...achPaymentInitiationConfig,
+                creationDate: new Date('2025-03-01T12:00:00.000Z'),
+                requestedExecutionDate: new Date('2025-03-15T00:00:00.000Z')
+            });
+            const xml = achPayment.serialize();
+            expect(xml).toMatch(/<ReqdExctnDt>2025-03-15<\/ReqdExctnDt>/);
+
+            // Validate against XSD
+            const xsdSchema = fs.readFileSync(
+                `${process.cwd()}/schemas/pain/pain.001.001.03.xsd`,
+                'utf8',
+            );
+            const xmlDoc = libxmljs.parseXml(xml);
+            const xsdDoc = libxmljs.parseXml(xsdSchema);
+            const isValid = xmlDoc.validate(xsdDoc);
+            expect(isValid).toBeTruthy();
+        });
+
         describe('created with iso20022', () => {
             let iso20022 = new ISO20022({
                 initiatingParty: initiatingParty
@@ -175,6 +204,10 @@ describe('ACHCreditPaymentInitiation', () => {
             test('should create a ACHCreditPaymentInitiation instance', () => {
                 expect(achPayment).toBeInstanceOf(ACHCreditPaymentInitiation);
             })
+            test('should fall back to the creation date when ReqdExctnDt is not a parseable date', () => {
+                // The Goldman Sachs example uses a YYYY-MM-DD placeholder for ReqdExctnDt
+                expect(achPayment.requestedExecutionDate).toStrictEqual(achPayment.creationDate);
+            })
             expect(achPayment.messageId).toBe("Message-Id");
             expect(achPayment.creationDate).toStrictEqual(new Date(
                 "2024-05-10T16:10:02.017+00:00"
@@ -188,6 +221,9 @@ describe('ACHCreditPaymentInitiation', () => {
             const achPayment = ACHCreditPaymentInitiation.fromXML(xmlContent);
             test('should create a ACHCreditPaymentInitiation instance', () => {
                 expect(achPayment).toBeInstanceOf(ACHCreditPaymentInitiation);
+            })
+            test('should correctly parse the requested execution date', () => {
+                expect(achPayment.requestedExecutionDate).toStrictEqual(new Date("2020-06-29"));
             })
 
             expect(achPayment.messageId).toBe("DOMT11234562");

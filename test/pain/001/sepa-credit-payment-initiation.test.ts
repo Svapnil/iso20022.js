@@ -159,6 +159,35 @@ describe('SEPACreditPaymentInitiation', () => {
             expect(isValid).toBeTruthy();
         });
 
+        test('should default the requested execution date to the creation date when requestedExecutionDate is not provided', () => {
+            sepaPayment = new SEPACreditPaymentInitiation({
+                ...sepaPaymentInitiationConfig,
+                creationDate: new Date('2025-03-01T12:00:00.000Z')
+            });
+            const xml = sepaPayment.serialize();
+            expect(xml).toMatch(/<ReqdExctnDt>2025-03-01<\/ReqdExctnDt>/);
+        });
+
+        test('should use the execution date when provided', () => {
+            sepaPayment = new SEPACreditPaymentInitiation({
+                ...sepaPaymentInitiationConfig,
+                creationDate: new Date('2025-03-01T12:00:00.000Z'),
+                requestedExecutionDate: new Date('2025-03-15T00:00:00.000Z')
+            });
+            const xml = sepaPayment.serialize();
+            expect(xml).toMatch(/<ReqdExctnDt>2025-03-15<\/ReqdExctnDt>/);
+
+            // Validate against XSD
+            const xsdSchema = fs.readFileSync(
+                `${process.cwd()}/schemas/pain/pain.001.001.03.xsd`,
+                'utf8',
+            );
+            const xmlDoc = libxmljs.parseXml(xml);
+            const xsdDoc = libxmljs.parseXml(xsdSchema);
+            const isValid = xmlDoc.validate(xsdDoc);
+            expect(isValid).toBeTruthy();
+        });
+
         test('serialized XML should have "EUR" as currency', () => {
             sepaPayment = new SEPACreditPaymentInitiation(sepaPaymentInitiationConfig);
             const xml = sepaPayment.serialize();
@@ -200,6 +229,7 @@ describe('SEPACreditPaymentInitiation', () => {
                 expect(sepaPayment.messageId).toBe("38b0440b12d741d690e5721ab6f90e33");
                 expect(sepaPayment.creationDate).toBeInstanceOf(Date);
                 expect(sepaPayment.creationDate.toISOString()).toBe("2025-02-10T01:22:07.958Z");
+                expect(sepaPayment.requestedExecutionDate).toStrictEqual(new Date("2025-02-10"));
                 expect(sepaPayment.initiatingParty).toEqual({
                     name: "Electrical",
                     id: "ELECTRIC",

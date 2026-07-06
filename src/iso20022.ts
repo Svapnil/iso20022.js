@@ -73,6 +73,7 @@ export interface ISO20022Config {
  *     ],
  *     messageId: 'MSGID123', // Optional
  *     creationDate: new Date(), // Optional
+ *     requestedExecutionDate: new Date(), // Optional
  * };
  */
 export interface SWIFTCreditPaymentInitiationConfig {
@@ -81,18 +82,24 @@ export interface SWIFTCreditPaymentInitiationConfig {
    * @type {AtLeastOne<SWIFTCreditPaymentInstruction>}
    */
   paymentInstructions: AtLeastOne<SWIFTCreditPaymentInstruction>;
-  
+
   /**
    * Optional unique identifier for the message. If not provided, a UUID will be generated.
    * @type {string}
    */
   messageId?: string;
-  
+
   /**
    * Optional creation date for the message. If not provided, current date will be used.
    * @type {Date}
    */
   creationDate?: Date;
+
+  /**
+   * Optional requested execution date for the payment. If not provided, the creation date will be used.
+   * @type {Date}
+   */
+  requestedExecutionDate?: Date;
 }
 
 /**
@@ -117,6 +124,7 @@ export interface SWIFTCreditPaymentInitiationConfig {
  *     ],
  *     messageId: 'MSGID123', // Optional
  *     creationDate: new Date(), // Optional
+ *     requestedExecutionDate: new Date(), // Optional
  * };
  */
 export interface SEPACreditPaymentInitiationConfig {
@@ -125,18 +133,24 @@ export interface SEPACreditPaymentInitiationConfig {
    * @type {AtLeastOne<SEPACreditPaymentInstruction>}
    */
   paymentInstructions: AtLeastOne<SEPACreditPaymentInstruction>;
-  
+
   /**
    * Optional unique identifier for the message. If not provided, a UUID will be generated.
    * @type {string}
    */
   messageId?: string;
-  
+
   /**
    * Optional creation date for the message. If not provided, current date will be used.
    * @type {Date}
    */
   creationDate?: Date;
+
+  /**
+   * Optional requested execution date for the payment. If not provided, the creation date will be used.
+   * @type {Date}
+   */
+  requestedExecutionDate?: Date;
 }
 
 /**
@@ -164,6 +178,7 @@ export interface SEPACreditPaymentInitiationConfig {
  *     ],
  *     messageId: 'MSGID123', // Optional
  *     creationDate: new Date(), // Optional
+ *     requestedExecutionDate: new Date(), // Optional
  * };
  */
 export interface RTPCreditPaymentInitiationConfig {
@@ -172,18 +187,24 @@ export interface RTPCreditPaymentInitiationConfig {
    * @type {AtLeastOne<RTPCreditPaymentInstruction>}
    */
   paymentInstructions: AtLeastOne<RTPCreditPaymentInstruction>;
-  
+
   /**
    * Optional unique identifier for the message. If not provided, a UUID will be generated.
    * @type {string}
    */
   messageId?: string;
-  
+
   /**
    * Optional creation date for the message. If not provided, current date will be used.
    * @type {Date}
    */
   creationDate?: Date;
+
+  /**
+   * Optional requested execution date for the payment. If not provided, the creation date will be used.
+   * @type {Date}
+   */
+  requestedExecutionDate?: Date;
 }
 
 /**
@@ -211,6 +232,7 @@ export interface RTPCreditPaymentInitiationConfig {
  *     ],
  *     messageId: 'MSGID123', // Optional
  *     creationDate: new Date(), // Optional
+ *     requestedExecutionDate: new Date(), // Optional
  * };
  */
 export interface ACHCreditPaymentInitiationConfig {
@@ -219,18 +241,24 @@ export interface ACHCreditPaymentInitiationConfig {
    * @type {AtLeastOne<ACHCreditPaymentInstruction>}
    */
   paymentInstructions: AtLeastOne<ACHCreditPaymentInstruction>;
-  
+
   /**
    * Optional unique identifier for the message. If not provided, a UUID will be generated.
    * @type {string}
    */
   messageId?: string;
-  
+
   /**
    * Optional creation date for the message. If not provided, current date will be used.
    * @type {Date}
    */
   creationDate?: Date;
+
+  /**
+   * Optional requested execution date for the payment. If not provided, the creation date will be used.
+   * @type {Date}
+   */
+  requestedExecutionDate?: Date;
 }
 
 /**
@@ -300,6 +328,7 @@ class ISO20022 {
    *   ],
    *   messageId: 'SWIFT-MSG-001', // Optional
    *   creationDate: new Date('2025-03-01'), // Optional
+   *   requestedExecutionDate: new Date('2025-03-03'), // Optional
    * });
    * @returns {SWIFTCreditPaymentInitiation} A new SWIFT Credit Payment Initiation object.
    */
@@ -311,6 +340,7 @@ class ISO20022 {
       paymentInstructions: config.paymentInstructions,
       messageId: config.messageId,
       creationDate: config.creationDate,
+      requestedExecutionDate: config.requestedExecutionDate,
     });
   }
 
@@ -336,6 +366,7 @@ class ISO20022 {
    *   ],
    *   messageId: 'SEPA-MSG-001', // Optional
    *   creationDate: new Date('2025-03-01'), // Optional
+   *   requestedExecutionDate: new Date('2025-03-03'), // Optional
    * });
    * @returns {SEPACreditPaymentInitiation} A new SEPA Credit Payment Initiation object.
    */
@@ -347,6 +378,7 @@ class ISO20022 {
       paymentInstructions: config.paymentInstructions,
       messageId: config.messageId,
       creationDate: config.creationDate,
+      requestedExecutionDate: config.requestedExecutionDate,
     });
   }
 
@@ -375,6 +407,7 @@ class ISO20022 {
    *   ],
    *   messageId: 'RTP-MSG-001', // Optional
    *   creationDate: new Date('2025-03-01'), // Optional
+   *   requestedExecutionDate: new Date('2025-03-03'), // Optional
    * });
    * @returns {RTPCreditPaymentInitiation} A new RTP Credit Payment Initiation object.
    */
@@ -386,6 +419,7 @@ class ISO20022 {
       paymentInstructions: config.paymentInstructions,
       messageId: config.messageId,
       creationDate: config.creationDate,
+      requestedExecutionDate: config.requestedExecutionDate,
     });
   }
 
@@ -414,6 +448,7 @@ class ISO20022 {
    *   ],
    *   messageId: 'ACH-MSG-001', // Optional
    *   creationDate: new Date('2025-03-01'), // Optional
+   *   requestedExecutionDate: new Date('2025-03-03'), // Optional
    * });
    * @returns {ACHCreditPaymentInitiation} A new ACH Credit Payment Initiation object.
    */
@@ -425,6 +460,7 @@ class ISO20022 {
       paymentInstructions: config.paymentInstructions,
       messageId: config.messageId,
       creationDate: config.creationDate,
+      requestedExecutionDate: config.requestedExecutionDate,
     });
   }
 
